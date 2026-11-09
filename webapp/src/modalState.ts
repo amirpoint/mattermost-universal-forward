@@ -1,6 +1,7 @@
 import {Post} from './types';
 
 let current: Post | null = null;
+let siteUrl = '';
 const listeners = new Set<() => void>();
 
 const notify = () => listeners.forEach((l) => l());
@@ -20,3 +21,8 @@ export const subscribe = (listener: () => void) => {
         listeners.delete(listener);
     };
 };
+
+export const setSiteUrl = (url: string) => {
+    siteUrl = url.replace(/\/$/, '');
+};
+export const getSiteUrl = () => siteUrl || window.location.origin;

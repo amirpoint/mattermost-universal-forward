@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 
 import * as api from './api';
 import {Target, forwardPost, planForward} from './forwardPost';
-import {closeForward, getForwardPost, subscribe} from './modalState';
+import {closeForward, getForwardPost, getSiteUrl, subscribe} from './modalState';
 import {Channel, Post, User} from './types';
 
 const COPY_WARNING = 'متن پیام کپی می‌شود (گیرنده به کانال مبدأ دسترسی ندارد)';
@@ -69,7 +69,7 @@ export default function ForwardModal() {
         setSending(true);
         setError('');
         try {
-            await forwardPost(post, target, note, window.location.origin);
+            await forwardPost(post, target, note, getSiteUrl());
             closeForward();
         } catch (e) {
             setError((e as Error).message);

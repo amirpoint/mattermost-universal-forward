@@ -17,8 +17,17 @@ export async function planForward(post: Post, target: Target): Promise<{mode: Mo
     return {mode: decideMode(sourceInfo, {kind: 'dm', userIsSourceMember: member}), destChannelId: null};
 }
 
-// DM/GM channels have no team, so a permalink falls back to the team in the current URL.
-const currentTeamName = () => window.location.pathname.split('/')[1] || '';
+// DM/GM channels have no team, so a permalink falls back to the team in the current URL
+// (after the SiteURL base path, if Mattermost is served under a subpath).
+function currentTeamName(siteUrl: string): string {
+    const base = new URL(siteUrl).pathname.replace(/\/$/, '');
+    const path = window.location.pathname;
+    const rest = base && path.startsWith(base) ? path.slice(base.length) : path;
+    return rest.split('/')[1] || '';
+}
+
+const DIRECT_MESSAGE_LABEL = 'پیام مستقیم';
+const channelLabel = (c: Channel) => (c.type === 'D' ? DIRECT_MESSAGE_LABEL : c.display_name || c.name);
 
 export async function forwardPost(post: Post, target: Target, note: string, siteUrl: string): Promise<{mode: Mode}> {
     const {mode, destChannelId} = await planForward(post, target);
@@ -27,7 +36,7 @@ export async function forwardPost(post: Post, target: Target, note: string, site
 
     let message: string;
     if (mode === 'permalink') {
-        const teamName = source.team_id ? (await api.getTeam(source.team_id)).name : currentTeamName();
+        const teamName = source.team_id ? (await api.getTeam(source.team_id)).name : currentTeamName(siteUrl);
         const link = `${siteUrl}/${teamName}/pl/${post.id}`;
         message = note ? `${note}\n${link}` : link;
     } else {
@@ -35,7 +44,7 @@ export async function forwardPost(post: Post, target: Target, note: string, site
         message = buildCopyMessage({
             message: post.message,
             username: author.username,
-            channelName: source.display_name || source.name,
+            channelName: channelLabel(source),
             createAt: post.create_at,
             fileNames,
             note: note || undefined,

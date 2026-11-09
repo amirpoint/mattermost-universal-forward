@@ -1,11 +1,13 @@
+import {canForward} from './canForward';
 import ForwardModal from './ForwardModal';
-import {openForward} from './modalState';
+import {openForward, setSiteUrl} from './modalState';
 
 const PLUGIN_ID = 'com.example.universal-forward';
 
 export default class Plugin {
     initialize(registry: any, store: any) {
         const getPost = (postId: string) => store.getState().entities.posts.posts[postId];
+        setSiteUrl(store.getState().entities.general?.config?.SiteURL || window.location.origin);
         registry.registerRootComponent(ForwardModal);
         registry.registerPostDropdownMenuAction(
             'Forward to…',
@@ -15,10 +17,7 @@ export default class Plugin {
                     openForward(post);
                 }
             },
-            (postId: string) => {
-                const post = getPost(postId);
-                return Boolean(post) && !post.type && !post.delete_at;
-            },
+            (postId: string) => canForward(getPost(postId)),
         );
     }
 }

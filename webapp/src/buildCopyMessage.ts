@@ -16,12 +16,13 @@ function formatDate(ms: number): string {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-const neutralizeMentions = (text: string) => text.replace(/@(channel|all|here)\b/gi, '@​$1');
+// A zero-width space after "@" stops every mention (user, group, @channel/@all/@here) from notifying.
+const neutralizeMentions = (text: string) => text.replace(/@(?=\w)/g, '@​');
 
 const quote = (text: string) => text.split('\n').map((line) => `> ${line}`).join('\n');
 
 export function buildCopyMessage(input: Input): string {
-    const source = `فوروارد از @${input.username} در ~${input.channelName}، ${formatDate(input.createAt)}`;
+    const source = neutralizeMentions(`فوروارد از @${input.username} در ${input.channelName}، ${formatDate(input.createAt)}`);
     const files = input.fileNames.length ? input.fileNames.join(', ') : '';
     const head = input.note ? `${input.note}\n` : '';
 

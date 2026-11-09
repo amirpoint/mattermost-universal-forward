@@ -39,7 +39,7 @@ describe('forwardPost', () => {
         const dest = channel({id: 'dst'});
         const result = await forwardPost(post, {kind: 'channel', channel: dest}, '', 'https://mm.test');
         expect(result.mode).toBe('copy');
-        expect(m.createPost.mock.calls[0][1]).toContain('فوروارد از @ali');
+        expect(m.createPost.mock.calls[0][1]).toContain('فوروارد از @​ali');
     });
     test('creates the DM channel exactly once, before posting', async () => {
         m.getUserIsChannelMember.mockResolvedValue(true);
@@ -51,6 +51,24 @@ describe('forwardPost', () => {
         m.getUserIsChannelMember.mockResolvedValue(true);
         m.createPost.mockRejectedValue(new Error('no permission'));
         await expect(forwardPost(post, {kind: 'user', user}, '', 'https://mm.test')).rejects.toThrow('no permission');
+    });
+});
+
+describe('forwardPost edge cases', () => {
+    test('DM source copy is labelled as a direct message, not the raw id pair', async () => {
+        m.getChannel.mockResolvedValue(channel({type: 'D', team_id: '', name: 'aaa__bbb', display_name: ''}));
+        await forwardPost(post, {kind: 'channel', channel: channel({id: 'dst'})}, '', 'https://mm.test');
+        const text = m.createPost.mock.calls[0][1];
+        expect(text).toContain('پیام مستقیم');
+        expect(text).not.toContain('__');
+    });
+    test('permalink under a subpath SiteURL keeps the base path and reads the team after it', async () => {
+        window.history.pushState({}, '', '/chat/myteam/channels/town-square');
+        m.getChannel.mockResolvedValue(channel({type: 'G', team_id: ''}));
+        m.getUserIsChannelMember.mockResolvedValue(true);
+        await forwardPost(post, {kind: 'user', user}, '', 'https://host/chat');
+        expect(m.createPost).toHaveBeenCalledWith('dm1', 'https://host/chat/myteam/pl/p1');
+        window.history.pushState({}, '', '/');
     });
 });
 

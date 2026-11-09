@@ -8,7 +8,7 @@ describe('buildCopyMessage', () => {
     test('quotes the message and appends the source line', () => {
         const out = buildCopyMessage({...base, message: 'hi'});
         expect(out).toContain('> hi');
-        expect(out).toContain('فوروارد از @ali در ~town-square، 2026-11-08 10:30');
+        expect(out).toContain('فوروارد از @​ali در town-square، 2026-11-08 10:30');
     });
     test('prefixes every line of a multi-line message with "> "', () => {
         const out = buildCopyMessage({...base, message: 'a\nb\nc'});
@@ -24,11 +24,20 @@ describe('buildCopyMessage', () => {
         expect(out).not.toContain(`@${word}`);
         expect(out).toContain(`@​${word}`);
     });
+    test('neutralizes ordinary user and group mentions in the body', () => {
+        const out = buildCopyMessage({...base, message: 'cc @sara and @developers'});
+        expect(out).not.toMatch(/@(sara|developers)/);
+        expect(out).toContain('@​sara');
+        expect(out).toContain('@​developers');
+    });
+    test('does not use ~ channel syntax in the source line', () => {
+        expect(buildCopyMessage({...base, message: 'hi'})).not.toContain('~');
+    });
     test('truncates a 20000-char message to at most 16383 chars and keeps the source line', () => {
         const out = buildCopyMessage({...base, message: 'x'.repeat(20000)});
         expect(out.length).toBeLessThanOrEqual(16383);
         expect(out).toContain('…');
-        expect(out).toContain('فوروارد از @ali');
+        expect(out).toContain('فوروارد از @​ali');
     });
     test('puts the note first', () => {
         const out = buildCopyMessage({...base, message: 'hi', note: 'FYI'});
