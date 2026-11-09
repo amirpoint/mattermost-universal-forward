@@ -1,0 +1,8 @@
+{
+  "id": "com.example.universal-forward",
+  "name": "Universal Forward",
+  "description": "Forward a post to any channel or user from anywhere it is shown (channel, search, Saved, Mentions, threads).",
+  "version": "0.1.0",
+  "min_server_version": "10.5.0",
+  "webapp": { "bundle_path": "webapp/dist/main.js" }
+}
