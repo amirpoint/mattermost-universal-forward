@@ -40,15 +40,22 @@ export async function forwardPost(post: Post, target: Target, note: string, site
         const link = `${siteUrl}/${teamName}/pl/${post.id}`;
         message = note ? `${note}\n${link}` : link;
     } else {
-        const [author, fileNames] = await Promise.all([api.getUser(post.user_id), api.getFileNames(post.id)]);
+        const [author, files] = await Promise.all([api.getUser(post.user_id), api.getPostFiles(post.id)]);
+        const fileIds: string[] = [];
+        for (const file of files) {
+            const blob = await api.downloadFile(file.id);
+            fileIds.push(await api.uploadFile(destId, blob, file.name));
+        }
         message = buildCopyMessage({
             message: post.message,
             username: author.username,
             channelName: channelLabel(source),
             createAt: post.create_at,
-            fileNames,
+            fileNames: [],
             note: note || undefined,
         });
+        await api.createPost(destId, message, fileIds);
+        return {mode};
     }
     await api.createPost(destId, message);
     return {mode};

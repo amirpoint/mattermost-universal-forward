@@ -13,7 +13,7 @@ beforeEach(() => {
     m.getChannel.mockResolvedValue(channel({}));
     m.getTeam.mockResolvedValue({id: 't1', name: 'myteam'});
     m.getUser.mockResolvedValue({id: 'u9', username: 'ali'});
-    m.getFileNames.mockResolvedValue([]);
+    m.getPostFiles.mockResolvedValue([]);
     m.createPost.mockResolvedValue({id: 'new'} as any);
     m.createDirectChannel.mockResolvedValue(channel({id: 'dm1', type: 'D', team_id: ''}));
 });
@@ -33,6 +33,21 @@ describe('forwardPost', () => {
         const dest = channel({id: 'dst', team_id: 't1'});
         await forwardPost(post, {kind: 'channel', channel: dest}, 'FYI', 'https://mm.test');
         expect(m.createPost).toHaveBeenCalledWith('dst', 'FYI\nhttps://mm.test/myteam/pl/p1');
+    });
+    test('copy mode uploads the files instead of writing their names', async () => {
+        m.getChannel.mockResolvedValue(channel({type: 'P'}));
+        m.getPostFiles.mockResolvedValue([{id: 'f1', name: '1742790102344.gif'}]);
+        const blob = new Blob(['gif']);
+        m.downloadFile.mockResolvedValue(blob);
+        m.uploadFile.mockResolvedValue('new-file');
+        await forwardPost({...post, message: ''}, {kind: 'channel', channel: channel({id: 'dst'})}, '', 'https://mm.test');
+        expect(m.downloadFile).toHaveBeenCalledWith('f1');
+        expect(m.uploadFile).toHaveBeenCalledWith('dst', blob, '1742790102344.gif');
+        const [dest, message, fileIds] = m.createPost.mock.calls[0];
+        expect(dest).toBe('dst');
+        expect(message).not.toContain('1742790102344.gif');
+        expect(message).toContain('فوروارد از');
+        expect(fileIds).toEqual(['new-file']);
     });
     test('private source with a channel target gets a copy', async () => {
         m.getChannel.mockResolvedValue(channel({type: 'P'}));

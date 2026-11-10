@@ -17,7 +17,7 @@ Plugin uploads must be allowed on the server, and this build is not signed.
 Open the **⋯** menu on a message and choose **Forward**. Search for a channel or a person, add an optional comment, and send.
 
 - When the recipient can open the original message, the plugin sends a permalink.
-- When they cannot (a private channel, a group message, or a direct message they are not in), the plugin copies the message text and adds a line saying who posted it and where.
+- When they cannot (a private channel, a group message, or a direct message they are not in), the plugin copies the message and adds a line saying who posted it and where. Images, videos, and other files are uploaded to that conversation; the copy does not stop at the file name.
 
 Public channels on the same team still use Mattermost's built-in Forward dialog.
 
